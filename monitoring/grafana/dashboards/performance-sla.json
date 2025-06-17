@@ -1,0 +1,160 @@
+{
+  "annotations": {"list": []},
+  "description": "Performance metrics and SLA monitoring for MCP system",
+  "editable": true,
+  "id": null,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "System availability over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "unit": "percent",
+          "max": 100,
+          "min": 95,
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 95},
+              {"color": "yellow", "value": 99},
+              {"color": "green", "value": 99.5}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "avg(up{job=~\"open-webui|mcpo|sandbox|time-client\"}) * 100",
+          "legendFormat": "System Availability",
+          "refId": "A"
+        }
+      ],
+      "title": "🌐 System Availability",
+      "type": "gauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Error rate percentage",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "unit": "percent",
+          "max": 10,
+          "min": 0,
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 5}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(http_requests_total[5m])) * 100",
+          "legendFormat": "Error Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "🚨 Error Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Response time SLA compliance",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "unit": "ms",
+          "thresholds": {
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 500},
+              {"color": "red", "value": 1000}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "P95 Response Time",
+          "refId": "A"
+        }
+      ],
+      "title": "⚡ P95 Response Time",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "SLA compliance over time",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "percent",
+          "max": 100,
+          "min": 90
+        }
+      },
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 8},
+      "id": 4,
+      "targets": [
+        {
+          "expr": "avg_over_time(up{job=\"open-webui\"}[5m]) * 100",
+          "legendFormat": "🌐 Open WebUI Uptime",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(up{job=\"mcpo\"}[5m]) * 100",
+          "legendFormat": "⚡ mcpo Uptime",
+          "refId": "B"
+        },
+        {
+          "expr": "avg_over_time(up{job=\"sandbox\"}[5m]) * 100",
+          "legendFormat": "🛡️ Sandbox Uptime",
+          "refId": "C"
+        },
+        {
+          "expr": "(1 - sum(rate(http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100",
+          "legendFormat": "📊 Success Rate SLA",
+          "refId": "D"
+        }
+      ],
+      "title": "📈 SLA Compliance Tracking",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["sla", "performance", "monitoring"],
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "📊 Performance & SLA Dashboard",
+  "uid": "performance-sla",
+  "version": 1
+} 

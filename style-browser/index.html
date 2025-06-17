@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 SDXL Style Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .styles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .style-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .style-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            border-color: #667eea;
+        }
+
+        .style-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .style-source {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 15px;
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .style-prompt {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .style-features {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .feature-template {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .feature-negative {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 50px;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 50px;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: auto;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .styles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 SDXL Style Browser</h1>
+            <p>Discover and explore hundreds of artistic styles for your AI image generation</p>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search styles by name, description, or keywords...">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Styles</button>
+                <button class="filter-btn" data-filter="template">With Templates</button>
+                <button class="filter-btn" data-filter="negative">With Negative Prompts</button>
+                <button class="filter-btn" data-filter="fooocus">Fooocus</button>
+                <button class="filter-btn" data-filter="sai">SAI</button>
+                <button class="filter-btn" data-filter="diva">Diva</button>
+                <button class="filter-btn" data-filter="twri">TWRI</button>
+            </div>
+        </div>
+
+        <div class="stats" id="statsDisplay">
+            <div class="loading">Loading styles... 🎨</div>
+        </div>
+
+        <div class="styles-grid" id="stylesGrid">
+        </div>
+    </div>
+
+    <script>
+        let allStyles = [];
+        let filteredStyles = [];
+
+        // Load styles from the API
+        async function loadStyles() {
+            try {
+                const response = await fetch('/api/styles');
+                const data = await response.json();
+                allStyles = data.styles;
+                filteredStyles = allStyles;
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading styles:', error);
+                document.getElementById('statsDisplay').innerHTML = '❌ Error loading styles. Make sure the diffusion API is running.';
+            }
+        }
+
+        function updateDisplay() {
+            const statsEl = document.getElementById('statsDisplay');
+            const gridEl = document.getElementById('stylesGrid');
+
+            statsEl.innerHTML = `📊 Showing ${filteredStyles.length} of ${allStyles.length} styles`;
+
+            if (filteredStyles.length === 0) {
+                gridEl.innerHTML = '<div class="no-results">🔍 No styles found matching your criteria</div>';
+                return;
+            }
+
+            gridEl.innerHTML = filteredStyles.map(style => {
+                const sourceIcon = getSourceIcon(style.source_file);
+                const features = [];
+                
+                if (style.has_prompt_template) {
+                    features.push('<span class="feature-tag feature-template">📝 Template</span>');
+                }
+                if (style.has_negative_prompt) {
+                    features.push('<span class="feature-tag feature-negative">🚫 Negative</span>');
+                }
+
+                return `
+                    <div class="style-card">
+                        <div class="style-name">
+                            ${sourceIcon} ${style.name}
+                            <button class="copy-btn" onclick="copyStyleName('${style.name.replace(/'/g, "\\'")}')">Copy Name</button>
+                        </div>
+                        <div class="style-source">${style.source_file}</div>
+                        ${style.preview_prompt ? `
+                            <div class="style-prompt">
+                                ${style.preview_prompt}
+                            </div>
+                        ` : ''}
+                        <div class="style-features">
+                            ${features.join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getSourceIcon(sourceFile) {
+            if (sourceFile.includes('fooocus')) return '🎭';
+            if (sourceFile.includes('sai')) return '🤖';
+            if (sourceFile.includes('diva')) return '💎';
+            if (sourceFile.includes('twri')) return '🌟';
+            if (sourceFile.includes('marc')) return '🎨';
+            if (sourceFile.includes('mre')) return '⚡';
+            return '🎨';
+        }
+
+        function copyStyleName(styleName) {
+            navigator.clipboard.writeText(styleName).then(() => {
+                // Brief visual feedback
+                event.target.textContent = 'Copied!';
+                setTimeout(() => {
+                    event.target.textContent = 'Copy Name';
+                }, 1000);
+            });
+        }
+
+        function filterStyles() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+
+            filteredStyles = allStyles.filter(style => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    style.name.toLowerCase().includes(searchTerm) ||
+                    (style.preview_prompt && style.preview_prompt.toLowerCase().includes(searchTerm)) ||
+                    style.source_file.toLowerCase().includes(searchTerm);
+
+                // Category filter
+                let matchesFilter = true;
+                switch (activeFilter) {
+                    case 'template':
+                        matchesFilter = style.has_prompt_template;
+                        break;
+                    case 'negative':
+                        matchesFilter = style.has_negative_prompt;
+                        break;
+                    case 'fooocus':
+                        matchesFilter = style.source_file.includes('fooocus');
+                        break;
+                    case 'sai':
+                        matchesFilter = style.source_file.includes('sai');
+                        break;
+                    case 'diva':
+                        matchesFilter = style.source_file.includes('diva');
+                        break;
+                    case 'twri':
+                        matchesFilter = style.source_file.includes('twri');
+                        break;
+                    case 'all':
+                    default:
+                        matchesFilter = true;
+                }
+
+                return matchesSearch && matchesFilter;
+            });
+
+            updateDisplay();
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterStyles);
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterStyles();
+            });
+        });
+
+        // Load styles on page load
+        loadStyles();
+    </script>
+</body>
+</html> 

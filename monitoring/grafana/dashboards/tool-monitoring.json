@@ -1,0 +1,72 @@
+{
+  "annotations": {"list": []},
+  "description": "MCP tool execution monitoring and performance metrics",
+  "editable": true,
+  "id": null,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Tool execution rates",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "unit": "ops"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [
+        {
+          "expr": "rate(mcp_tool_executions_total[5m]) * 60",
+          "legendFormat": "{{tool_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "🔧 Tool Execution Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Tool success rates",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "unit": "percent",
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 80},
+              {"color": "green", "value": 95}
+            ]
+          }
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(mcp_tool_executions_total{status=\"success\"}[5m])) / sum(rate(mcp_tool_executions_total[5m])) * 100",
+          "legendFormat": "Success Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "✅ Tool Success Rate",
+      "type": "gauge"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["mcp", "tools"],
+  "time": {"from": "now-1h", "to": "now"},
+  "title": "🔧 MCP Tool Monitoring",
+  "uid": "mcp-tool-monitoring",
+  "version": 1
+} 
