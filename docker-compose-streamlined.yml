@@ -1,7 +1,9 @@
+name: mcp_things2
+
 services:
   # Core MCP Services (keep these)
   sandbox:
-    image: sandbox:latest
+    image: mcp_things2-sandbox:latest
     build:
       context: ./sandbox
       dockerfile: Dockerfile
@@ -14,7 +16,7 @@ services:
       - PYTHONPATH=/app
 
   time-client:
-    image: time-client:latest
+    image: mcp_things2-time-client:latest
     build:
       context: ./time-client
       dockerfile: Dockerfile
@@ -49,22 +51,18 @@ services:
       - "8080:8080"
     volumes:
       - ./mcpo-config.json:/app/config.json:ro
-    command: ["--port", "8080", "--api-key", "your-secret-key", "--config", "/app/config.json"]
+    command: ["serve", "--port", "8080", "--api-key", "your-secret-key", "--config", "/app/config.json"]
     depends_on:
       time-client:
         condition: service_healthy
       sandbox:
         condition: service_healthy
       diffusion-api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+        condition: service_started
 
   # AI Image Generation API
   diffusion-api:
+    image: mcp_things2-diffusion-api:latest
     build:
       context: ./diffusion-api
       dockerfile: Dockerfile
@@ -81,14 +79,13 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    environment:
+      - PYTHONPATH=/app
+
 
   # Style Browser Web Interface
   style-browser:
+    image: mcp_things2-style-browser:latest
     build:
       context: ./style-browser
       dockerfile: Dockerfile
@@ -98,7 +95,7 @@ services:
       - DIFFUSION_API_URL=http://diffusion-api:8000
     depends_on:
       diffusion-api:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -113,14 +110,14 @@ services:
     volumes:
       - ./data/open-webui:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://ollama:11434/v1
-      - OPENAI_API_KEY=ollama
+      - OPENAI_API_BASE_URL=https://api.openai.com/v1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ENABLE_OPENAI_API=true
     depends_on:
       ollama:
         condition: service_started
       mcpo:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -128,41 +125,41 @@ services:
       retries: 3
 
   # Monitoring Services (kept these!)
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./data/prometheus:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - ./data/prometheus:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/etc/prometheus/console_libraries'
+  #     - '--web.console.templates=/etc/prometheus/consoles'
+  #     - '--web.enable-lifecycle'
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - ./data/grafana:/var/lib/grafana
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3 
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #   volumes:
+  #     - ./data/grafana:/var/lib/grafana
+  #     - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+  #     - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+  #   depends_on:
+  #     prometheus:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3 

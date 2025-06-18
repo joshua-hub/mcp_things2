@@ -31,12 +31,6 @@ async def health_check():
 mcp = FastApiMCP(app)
 mcp.mount()
 
-# Add MCP SSE endpoint for mcpo integration
-@app.get("/mcp/sse")
-async def mcp_sse_endpoint():
-    """SSE endpoint for MCP protocol communication"""
-    return mcp.sse_endpoint()
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8003) 

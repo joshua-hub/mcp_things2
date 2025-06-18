@@ -7,10 +7,28 @@ rule_files:
   # - "second_rules.yml"
 
 scrape_configs:
-  # MCP Server metrics (has proper Prometheus metrics)
-  - job_name: 'mcp-server'
+  # Core MCP Services
+  - job_name: 'sandbox'
     static_configs:
-      - targets: ['mcp-server:8000']
+      - targets: ['sandbox:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'time-client'
+    static_configs:
+      - targets: ['time-client:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'diffusion-api'
+    static_configs:
+      - targets: ['diffusion-api:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'style-browser'
+    static_configs:
+      - targets: ['style-browser:8080']
     metrics_path: '/metrics'
     scrape_interval: 5s
 

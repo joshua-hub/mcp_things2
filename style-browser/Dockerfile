@@ -1,10 +1,11 @@
 # Stage 1: Builder
-FROM python:3.11-alpine AS builder
+FROM python:3.11-slim AS builder
 
 # Update package lists and install build dependencies
-RUN apk update && \
-    apk add --no-cache python3-dev gcc musl-dev && \
-    rm -rf /var/cache/apk/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-venv && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set up pip configuration
 RUN mkdir -p /root/.pip
@@ -19,29 +20,29 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Final
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
 # Install minimal runtime dependencies and create user
-RUN apk add --no-cache libstdc++ && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libstdc++6 && \
     # Create non-privileged user
-    addgroup -S appgroup && \
-    adduser -S appuser -G appgroup && \
+    groupadd -r appgroup && \
+    useradd -r -g appgroup -d /app appuser && \
     # Create application directory
-    mkdir -p /app/workspace && \
+    mkdir -p /app && \
     chown -R appuser:appgroup /app && \
-    # Remove unnecessary packages and shells
-    rm -f /bin/sh /bin/ash /bin/bash && \
-    rm -rf /bin/* /sbin/* /usr/bin/* /usr/sbin/*
+    # Clean up
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy virtual environment from builder
 COPY --from=builder /venv /venv
 ENV PATH="/venv/bin:$PATH"
 
-# Clean up Python artifacts
+# Clean up Python artifacts BEFORE removing shell
 RUN find /venv -type f -name "*.so" -exec strip {} \; 2>/dev/null || true && \
     find /venv -type d -name "__pycache__" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type f -name "*.pyc" -delete && \
-    find /venv -type d -name "*.dist-info" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "*.egg-info" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "doc" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "docs" -exec rm -r {} + 2>/dev/null || true

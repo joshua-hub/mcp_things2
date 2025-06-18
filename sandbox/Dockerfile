@@ -43,7 +43,6 @@ ENV PATH="/venv/bin:$PATH"
 RUN find /venv -type f -name "*.so" -exec strip {} \; 2>/dev/null || true && \
     find /venv -type d -name "__pycache__" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type f -name "*.pyc" -delete && \
-    find /venv -type d -name "*.dist-info" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "*.egg-info" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "doc" -exec rm -r {} + 2>/dev/null || true && \
     find /venv -type d -name "docs" -exec rm -r {} + 2>/dev/null || true

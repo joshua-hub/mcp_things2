@@ -2,21 +2,21 @@
   "mcpServers": {
     "time": {
       "type": "sse",
-      "url": "http://time-client:8003/mcp/sse",
+      "url": "http://time-client:8003/mcp",
       "headers": {
         "Content-Type": "application/json"
       }
     },
     "sandbox": {
       "type": "sse",
-      "url": "http://sandbox:8001/mcp/sse",
+      "url": "http://sandbox:8001/mcp",
       "headers": {
         "Content-Type": "application/json"
       }
     },
     "diffusion": {
       "type": "sse",
-      "url": "http://diffusion-api:8000/mcp/sse",
+      "url": "http://diffusion-api:8000/mcp",
       "headers": {
         "Content-Type": "application/json"
       }
