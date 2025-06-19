@@ -1,0 +1,13 @@
+fastapi>=0.115.12
+uvicorn>=0.34.3
+diffusers>=0.33.1
+transformers>=4.52.4
+accelerate>=1.7.0
+safetensors>=0.5.3
+torch>=2.7.1
+pillow>=11.2.1
+pydantic>=2.11.7
+sentencepiece>=0.2.0
+fastapi-mcp>=0.3.4
+huggingface_hub>=0.33.0
+requests>=2.31.0 
